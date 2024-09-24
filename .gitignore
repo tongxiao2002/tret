@@ -1,0 +1,10 @@
+# python
+**/__pycache__/
+build/
+*.egg-info/
+
+# IDE
+.vscode
+
+# macOS
+**/.DS_Store
