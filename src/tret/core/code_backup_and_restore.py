@@ -4,7 +4,7 @@ from ..utils.module_detection import (
     detect_all_modules,
     generate_requirements_txt,
 )
-from ..utils.tarball_utils import tar_files
+from ..utils.tarball_utils import create_tarball_from_files
 
 
 def is_git_exists():
@@ -43,7 +43,7 @@ def backup_codes(workspace_dir: str):
         requirements_filepath = os.path.join(workspace_dir, "requirements.txt")
 
         tarball_filepath = os.path.join(workspace_dir, "codes.tar.gz")
-        tar_files(rel_filepaths, tarball_filepath)
+        create_tarball_from_files(rel_filepaths, tarball_filepath)
         with open(requirements_filepath, "w", encoding="utf-8") as fout:
             fout.write("\n".join(requirements))
     else:
