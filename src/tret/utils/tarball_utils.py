@@ -33,6 +33,21 @@ def create_tarball_from_files(filepaths: list[str], output: str, arcpaths: list[
             tar.add(name=filepath, arcname=arcpath, recursive=True, filter=_filter_pycaches)
 
 
+def restore_files_from_tarball(tarball_path: str, output_dir: str):
+    """
+    Restore files from a tarball archive.
+
+    Args:
+        tarball_path (str): The path to the tarball archive.
+        output_dir (str): The directory where the files will be extracted.
+
+    Returns:
+        None
+    """
+    with tarfile.open(tarball_path, "r:gz") as tar:
+        tar.extractall(path=output_dir)
+
+
 if __name__ == "__main__":
     import os
     files = ["src/tret/utils/tarball_utils.py", "src/tret/utils/module_detection.py", "src/tret/utils/__pycache__"]

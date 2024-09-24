@@ -1,1 +1,1 @@
-from .main_class import Tret
+from .main_class import TretWorkspace
