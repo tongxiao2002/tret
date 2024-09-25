@@ -38,7 +38,7 @@ def backup_codes(workspace_dir: str, backup_codes_as_tarball: bool = False):
     external_modules = classified_modules["external_modules"]
     requirements = generate_requirements_txt(external_modules)
     if not is_git_exists() or backup_codes_as_tarball:
-        # if git does not exist, save all the codes as a tarball.
+        # if git does not exist, backup all the codes as a tarball.
         # Here, codes are defined as local modules imported by this experiment.
         files = [module.__file__ for module in classified_modules['local_modules']]
         working_directory = os.getcwd()
@@ -92,10 +92,14 @@ def restore_codes(workspace_dir: str, keep_requirements_txt: bool = False):
     Raises:
         AssertionError: If the provided workspace directory is not a valid directory.
     """
-    assert os.path.isdir(workspace_dir), f"{workspace_dir} is not a valid directory."
-    if not is_git_exists():
+    git_info_dir = os.path.join(workspace_dir, ".gitinfo")
+    codes_tarball_filepath = os.path.join(workspace_dir, "codes.tar.gz")
+    assert os.path.isdir(git_info_dir) or os.path.isfile(codes_tarball_filepath), f"Workspace '{workspace_dir}' corrupted."
+
+    if not is_git_exists() or (not os.path.isdir(git_info_dir) and os.path.isfile(codes_tarball_filepath)):
         # if git does not exist, restore the tarball and requirements.txt
-        # firstly save current codes, then restore from tarball in the workspace.
+        # firstly backup current codes, then restore from tarball in the workspace.
+        # TODO: Find a better place to backup & restore current-codes.tar.gz
         current_codes_tarball_filepath = os.path.join(DEFAULT_WORKSPACE_DIR, "current-codes.tar.gz")
         if workspace_dir == DEFAULT_WORKSPACE_DIR:
             # if workspace_dir is the same as the base directory,
@@ -106,7 +110,7 @@ def restore_codes(workspace_dir: str, keep_requirements_txt: bool = False):
             os.remove(current_codes_tarball_filepath)
             return
         elif not os.path.isfile(current_codes_tarball_filepath):
-            # if current codes tarball does not exist, save all current codes,
+            # if current codes tarball does not exist, backup all current codes,
             # on the other hand, if current codes tarball exists, we should not override it.
             classified_modules = detect_all_modules()
             files = [module.__file__ for module in classified_modules['local_modules']]
@@ -114,8 +118,7 @@ def restore_codes(workspace_dir: str, keep_requirements_txt: bool = False):
             rel_filepaths = [os.path.relpath(file, working_directory) for file in files]
             create_tarball_from_files(filepaths=rel_filepaths, output=current_codes_tarball_filepath)
 
-        tarball_filepath = os.path.join(workspace_dir, "codes.tar.gz")
-        restore_files_from_tarball(tarball_filepath, output_dir=os.getcwd())
+        restore_files_from_tarball(codes_tarball_filepath, output_dir=os.getcwd())
         if not keep_requirements_txt:
             os.remove("requirements.txt")
     else:
