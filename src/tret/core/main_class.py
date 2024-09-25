@@ -26,18 +26,23 @@ class TretWorkspace:
             raise FileExistsError(f"'{self.workspace_dir}' is already a file, cannot work as a workspace.")
         os.makedirs(self.workspace_dir, exist_ok=True)
 
-    def restore(self):
+    def restore(self, keep_requirements_txt: bool = False):
         """
         Restores the codes from the specified workspace directory.
 
         Args:
             workspace_dir (str): The directory where the workspace will be restored from.
         """
-        restore_codes(self.workspace_dir)
+        restore_codes(self.workspace_dir, keep_requirements_txt)
         # TODO: check the modified time of linked data files and symlinks
         # if the linked data files is newer than symlinks, raise a warning that the raw data has been changed.
 
-    def save(self, datafiles: list[str] = None):
+    def save(
+        self,
+        files_to_backup: list[str] = None,
+        files_to_backup_as_tarball: list[str] = None,
+        files_to_backup_as_symlink: list[str] = None,
+    ):
         """
         Saves the current workspace to the specified directory.
 
@@ -46,9 +51,9 @@ class TretWorkspace:
             use_symlinks (bool): If True, the data will be saved as symlinks. Otherwise, the data will be saved as a tarball.
         """
         backup_codes(self.workspace_dir, backup_codes_as_tarball=self.force_backup_codes_as_tarball)
-        if datafiles is not None:
-            backup_data(
-                filepaths=datafiles,
-                workspace_dir=self.workspace_dir,
-                use_symlinks=self.backup_data_as_symlinks,
-            )
+        backup_data(
+            workspace_dir=self.workspace_dir,
+            files_to_backup=files_to_backup,
+            files_to_backup_as_tarball=files_to_backup_as_tarball,
+            files_to_backup_as_symlink=files_to_backup_as_symlink,
+        )
