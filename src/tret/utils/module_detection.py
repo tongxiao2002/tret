@@ -23,10 +23,10 @@ import pipdeptree
 def is_standard_lib_or_builtin_lib(module: types.ModuleType):
     """check if a module is part of the standard library or python builtin library
     """
-    model_name = module.__name__
+    module_name = module.__name__
     # stdlibs contains all python standard library
     # modules without __file__ attribute are python builtin modules
-    return model_name in stdlibs or (not hasattr(module, "__file__")) or not module.__file__
+    return module_name in stdlibs or (not hasattr(module, "__file__")) or not module.__file__
 
 
 def is_local_module(module: types.ModuleType):
@@ -64,15 +64,16 @@ def detect_all_modules():
     }
     for module_name, module in modules.items():
         # only classify root modules
-        if module.__name__.split('.')[0] != module.__name__:
-            continue
-
-        if is_standard_lib_or_builtin_lib(module):
+        splitted_module_name = module.__name__.split('.')
+        if is_standard_lib_or_builtin_lib(module) or is_standard_lib_or_builtin_lib(modules[splitted_module_name[0]]):
             classified_modules["standard_libs"].append(module)
         elif is_local_module(module):
             classified_modules["local_modules"].append(module)
         else:
             classified_modules["external_modules"].append(module)
+    # deduplication
+    for class_name, modules in classified_modules.items():
+        classified_modules[class_name] = list(set(modules))
     return classified_modules
 
 
@@ -87,11 +88,3 @@ def generate_requirements_txt(external_modules: list[types.ModuleType]):
         if version:
             requirements.append(f"{module.__name__}=={version}")
     return requirements
-
-
-if __name__ == "__main__":
-    classified_modules = detect_all_modules()
-    external_modules = classified_modules["external_modules"]
-    requirements = generate_requirements_txt(external_modules)
-    with open("requirements.txt", "w") as fout:
-        fout.write("\n".join(requirements))

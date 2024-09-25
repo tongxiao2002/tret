@@ -46,11 +46,3 @@ def restore_files_from_tarball(tarball_path: str, output_dir: str):
     """
     with tarfile.open(tarball_path, "r:gz") as tar:
         tar.extractall(path=output_dir)
-
-
-if __name__ == "__main__":
-    import os
-    files = ["src/tret/utils/tarball_utils.py", "src/tret/utils/module_detection.py", "src/tret/utils/__pycache__"]
-    files = [os.path.abspath(file) for file in files]
-    files = [os.path.relpath(file, os.getcwd()) for file in files]
-    create_tarball_from_files(files, "tret_utils.tar.gz")

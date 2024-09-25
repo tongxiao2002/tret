@@ -19,7 +19,7 @@ def is_git_exists():
         return False
 
 
-def backup_codes(workspace_dir: str):
+def backup_codes(workspace_dir: str, backup_codes_as_tarball: bool = False):
     """
     Backs up the current code in the specified workspace directory.
 
@@ -37,7 +37,7 @@ def backup_codes(workspace_dir: str):
     classified_modules = detect_all_modules()
     external_modules = classified_modules["external_modules"]
     requirements = generate_requirements_txt(external_modules)
-    if not is_git_exists():
+    if not is_git_exists() or backup_codes_as_tarball:
         # if git does not exist, save all the codes as a tarball.
         # Here, codes are defined as local modules imported by this experiment.
         files = [module.__file__ for module in classified_modules['local_modules']]
@@ -61,8 +61,10 @@ def backup_codes(workspace_dir: str):
         repo = Repo(os.getcwd())
         commit_hash = repo.head.commit.hexsha
         diff = repo.git.diff(commit_hash)
-        git_commit_hash_filepath = os.path.join(workspace_dir, ".gitinfo", "GIT_COMMIT_HASH")
-        git_diff_info_filepath = os.path.join(workspace_dir, ".gitinfo", "GIT_DIFF_INFO")
+        git_info_dir = os.path.join(workspace_dir, ".gitinfo")
+        os.makedirs(git_info_dir, exist_ok=True)
+        git_commit_hash_filepath = os.path.join(git_info_dir, "GIT_COMMIT_HASH")
+        git_diff_info_filepath = os.path.join(git_info_dir, "GIT_DIFF_INFO")
         with open(git_commit_hash_filepath, "w", encoding="utf-8") as fout:
             fout.write(commit_hash)
         with open(git_diff_info_filepath, "w", encoding="utf-8") as fout:
@@ -119,8 +121,9 @@ def restore_codes(workspace_dir: str, keep_requirements_txt: bool = False):
     else:
         # if git exists, checkout to the stored commit,
         # then restore the unstaged changes from diff info.
-        git_commit_hash_filepath = os.path.join(workspace_dir, ".gitinfo", "GIT_COMMIT_HASH")
-        git_diff_info_filepath = os.path.join(workspace_dir, ".gitinfo", "GIT_DIFF_INFO")
+        git_info_dir = os.path.join(workspace_dir, ".gitinfo")
+        git_commit_hash_filepath = os.path.join(git_info_dir, "GIT_COMMIT_HASH")
+        git_diff_info_filepath = os.path.join(git_info_dir, "GIT_DIFF_INFO")
         with open(git_commit_hash_filepath, "r", encoding="utf-8") as fin:
             commit_hash = fin.read()
 
