@@ -3,7 +3,10 @@ import json
 import warnings
 import datetime
 from ..arguments import TretArguments
-from ..constants import REQUIREMENTS_TXT_FILENAME
+from ..constants import (
+    REQUIREMENTS_TXT_FILENAME,
+    TRET_ATTRIBUTES_FILENAME,
+)
 from .data_backup import backup_data
 from .code_backup_and_restore import (
     backup_codes,
@@ -27,8 +30,8 @@ class TretWorkspace:
         self.arguments = arguments
         self.workspace_basedir = self.arguments.workspace_basedir
         self.force_backup_codes_as_tarball = self.arguments.force_backup_codes_as_tarball
-        self.backup_data_as_symlinks = self.arguments.backup_data_as_symlinks
         self.workspace_name = self.arguments.workspace_name
+        self.append_data_to_existing_tarball = self.arguments.append_data_to_existing_tarball
         if self.workspace_name is None:
             self.workspace_name = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
@@ -36,7 +39,7 @@ class TretWorkspace:
         if os.path.isfile(self.workspace_dir):
             raise FileExistsError(f"'{self.workspace_dir}' is already a file, cannot work as a workspace.")
         os.makedirs(self.workspace_dir, exist_ok=True)
-        self.tret_attributes_filepath = os.path.join(self.workspace_dir, ".tretattributes")
+        self.tret_attributes_filepath = os.path.join(self.workspace_dir, TRET_ATTRIBUTES_FILENAME)
 
     def restore_current_codes_from_tarball(self, keep_requirements_txt: bool = False):
         current_codes_tarball_filepath = os.path.join(self.workspace_dir, "current-codes.tar.gz")
@@ -77,6 +80,7 @@ class TretWorkspace:
         files_to_backup: list[str] = None,
         files_to_backup_as_tarball: list[str] = None,
         files_to_backup_as_symlink: list[str] = None,
+        append_data_to_existing_tarball: bool = True,
     ):
         """
         Backs up specified files in different formats.
@@ -93,6 +97,7 @@ class TretWorkspace:
             files_to_backup=files_to_backup,
             files_to_backup_as_tarball=files_to_backup_as_tarball,
             files_to_backup_as_symlink=files_to_backup_as_symlink,
+            append_data_to_existing_tarball=append_data_to_existing_tarball,
         )
         # save attributes
         tret_attributes = {

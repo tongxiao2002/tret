@@ -27,9 +27,10 @@ class TretArguments:
     )
 
     # data backup arguments
-    backup_data_as_symlinks: bool = dataclasses.field(
+    append_data_to_existing_tarball: bool = dataclasses.field(
         default=True,
-        metadata={"help": "Whether backup data as symlinks, defaults to 'True'."}
+        metadata={"help": "If data tarball e.g, `data.tar.gz` already exists, "
+                  "whether to append new data to this tarball, or just overwrite it."}
     )
 
 

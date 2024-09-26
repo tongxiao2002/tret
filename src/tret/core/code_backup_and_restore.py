@@ -57,7 +57,11 @@ def backup_codes(workspace_dir: str, backup_codes_as_tarball: bool = False):
         rel_filepaths += [os.path.relpath(requirements_filepath, working_directory)]
 
         tarball_filepath = os.path.join(workspace_dir, CODES_TARBALL_FILENAME)
-        create_tarball_from_files(rel_filepaths, tarball_filepath)
+        create_tarball_from_files(
+            filepaths=rel_filepaths,
+            output=tarball_filepath,
+            append_data_to_existing_tarball=False,
+        )
         os.remove(requirements_filepath)
     else:
         # if git exists, save the current commit hash and the diff between current code and commit.
@@ -116,7 +120,11 @@ def restore_codes(workspace_dir: str, keep_requirements_txt: bool = False):
             files = [module.__file__ for module in classified_modules['local_modules']]
             working_directory = os.getcwd()
             rel_filepaths = [os.path.relpath(file, working_directory) for file in files]
-            create_tarball_from_files(filepaths=rel_filepaths, output=current_codes_tarball_filepath)
+            create_tarball_from_files(
+                filepaths=rel_filepaths,
+                output=current_codes_tarball_filepath,
+                append_data_to_existing_tarball=False,
+            )
             print(
                 f"Backup current codes into {current_codes_tarball_filepath}, "
                 "you can restore it through `TretWorkspace.restore_current_codes_from_tarball()`."

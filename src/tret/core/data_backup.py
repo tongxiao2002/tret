@@ -11,6 +11,7 @@ def backup_data(
     files_to_backup: list[str] = None,
     files_to_backup_as_tarball: list[str] = None,
     files_to_backup_as_symlink: list[str] = None,
+    append_data_to_existing_tarball: bool = True,
 ):
     """
     Backs up specified files and directories from the workspace to a backup directory.
@@ -64,4 +65,8 @@ def backup_data(
 
         os.makedirs(data_backup_dir, exist_ok=True)
         data_tarball_filepath = os.path.join(data_backup_dir, DATA_TARBALL_FILENAME)
-        create_tarball_from_files(files_to_backup_as_tarball, data_tarball_filepath)
+        create_tarball_from_files(
+            filepaths=files_to_backup_as_tarball,
+            output=data_tarball_filepath,
+            append_data_to_existing_tarball=append_data_to_existing_tarball,
+        )

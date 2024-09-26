@@ -1,5 +1,6 @@
 # tret-settings
 DEFAULT_WORKSPACE_DIR = "tret-workspaces"
+TRET_ATTRIBUTES_FILENAME = ".tretattributes"
 
 # requirements.txt filename
 REQUIREMENTS_TXT_FILENAME = "tret-requirements.txt"

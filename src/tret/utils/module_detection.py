@@ -17,7 +17,7 @@ else:
 
 import importlib
 import importlib.metadata
-import pipdeptree
+# import pipdeptree
 
 
 def is_standard_lib_or_builtin_lib(module: types.ModuleType):
