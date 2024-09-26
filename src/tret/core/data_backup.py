@@ -1,5 +1,6 @@
 import os
 import shutil
+from ..constants import DATA_TARBALL_FILENAME
 from ..utils.tarball_utils import (
     create_tarball_from_files,
 )
@@ -62,5 +63,5 @@ def backup_data(
                 raise FileNotFoundError(f"'{filepath}' does not exists.")
 
         os.makedirs(data_backup_dir, exist_ok=True)
-        data_tarball_filepath = os.path.join(data_backup_dir, "data.tar.gz")
+        data_tarball_filepath = os.path.join(data_backup_dir, DATA_TARBALL_FILENAME)
         create_tarball_from_files(files_to_backup_as_tarball, data_tarball_filepath)
