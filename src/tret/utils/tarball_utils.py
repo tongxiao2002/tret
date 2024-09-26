@@ -36,6 +36,7 @@ def create_tarball_from_files(
                 tar.add(name=filepath, arcname=arcpath, recursive=True, filter=_filter_pycaches)
     else:
         # append new data to existing tarball
+        existing_filenames = set()
         filename = os.path.basename(output)
         old_tarball_filepath = os.path.join(os.path.dirname(output), f"old-{filename}")
         os.replace(output, old_tarball_filepath)
@@ -43,8 +44,13 @@ def create_tarball_from_files(
             with tarfile.open(old_tarball_filepath, "r") as old_tar:
                 for member in old_tar.getmembers():
                     tar.addfile(member, old_tar.extractfile(member))
+                    existing_filenames.add(member.name)
 
             for filepath, arcpath in zip(filepaths, arcpaths):
+                filename_in_tarball = arcpath if arcpath else filepath
+                # skip files whose name are already in the tarball
+                if filename_in_tarball in existing_filenames:
+                    continue
                 tar.add(name=filepath, arcname=arcpath, recursive=True, filter=_filter_pycaches)
         os.remove(old_tarball_filepath)
 
@@ -60,5 +66,13 @@ def restore_files_from_tarball(tarball_path: str, output_dir: str):
     Returns:
         None
     """
-    with tarfile.open(tarball_path, "r:gz") as tar:
+    with tarfile.open(tarball_path, "r") as tar:
         tar.extractall(path=output_dir)
+
+
+def get_filepaths_in_tarball(tarball_path: str):
+    filepaths = []
+    with tarfile.open(tarball_path, "r") as tar:
+        for member in tar.getmembers():
+            filepaths.append(member.name)
+    return filepaths

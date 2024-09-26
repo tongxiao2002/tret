@@ -49,14 +49,14 @@ class TretWorkspace:
         if not keep_requirements_txt:
             os.remove(REQUIREMENTS_TXT_FILENAME)
 
-    def restore(self, keep_requirements_txt: bool = False):
+    def restore(self):
         """
         Restores the codes from the specified workspace directory.
 
         Args:
             workspace_dir (str): The directory where the workspace will be restored from.
         """
-        restore_codes(self.workspace_dir, keep_requirements_txt)
+        restore_codes(self.workspace_dir)
 
         # check the modify time of symlink and the linked file
         # tret_attributes = json.load(open(self.tret_attributes_filepath, "r", encoding="utf-8"))
@@ -77,10 +77,10 @@ class TretWorkspace:
 
     def backup(
         self,
-        files_to_backup: list[str] = None,
-        files_to_backup_as_tarball: list[str] = None,
-        files_to_backup_as_symlink: list[str] = None,
-        append_data_to_existing_tarball: bool = True,
+        datafiles_to_backup: list[str] = None,
+        datafiles_to_backup_as_tarball: list[str] = None,
+        datafiles_to_backup_as_symlink: list[str] = None,
+        additional_codefiles_to_backup: list[str] = None,
     ):
         """
         Backs up specified files in different formats.
@@ -91,13 +91,17 @@ class TretWorkspace:
         Returns:
             None
         """
-        backup_codes(self.workspace_dir, backup_codes_as_tarball=self.force_backup_codes_as_tarball)
+        backup_codes(
+            self.workspace_dir,
+            additional_codefiles_to_backup=additional_codefiles_to_backup,
+            backup_codes_as_tarball=self.force_backup_codes_as_tarball,
+        )
         backup_data(
             workspace_dir=self.workspace_dir,
-            files_to_backup=files_to_backup,
-            files_to_backup_as_tarball=files_to_backup_as_tarball,
-            files_to_backup_as_symlink=files_to_backup_as_symlink,
-            append_data_to_existing_tarball=append_data_to_existing_tarball,
+            files_to_backup=datafiles_to_backup,
+            files_to_backup_as_tarball=datafiles_to_backup_as_tarball,
+            files_to_backup_as_symlink=datafiles_to_backup_as_symlink,
+            append_data_to_existing_tarball=self.append_data_to_existing_tarball,
         )
         # save attributes
         tret_attributes = {
