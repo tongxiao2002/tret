@@ -36,8 +36,8 @@ def backup_codes(
     Backs up code files from the current workspace.
 
     This function detects all modules in the current workspace, generates a requirements.txt file for external modules,
-    and backs up code files either as a tarball or using Git, depending on the presence of a Git repository and the 
-    `backup_codes_as_tarball` flag.
+    and backs up code files either as a tarball or using Git,
+    depending on the presence of a Git repository and the `backup_codes_as_tarball` flag.
 
     Args:
         workspace_dir (str): The directory where the backup files will be stored.
@@ -87,7 +87,7 @@ def backup_codes(
             fout.write("\n".join(requirements))
 
         repo = Repo(os.getcwd())
-        # get not tracked codefiles, which will be backupped as a tarball
+        # get not tracked codefiles, which will be backed up as a tarball
         git_tracked_files = _get_gitrepo_tracked_files(repo)
         git_not_tracked_codefiles = [
             os.path.relpath(item, os.getcwd())
