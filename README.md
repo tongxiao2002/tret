@@ -75,7 +75,7 @@ If you have initialized a git repository in your project, Tret will simply recor
 
 Else Tret will pack all the `local modules` into a tarball (typically named `codes.tar.gz`) and save it in the workspace.
 
-So you may have noticed that **Tret will only backup python modules that will be used in your program automatically**. For those are not python modules, such as a shell script which triggers python programs, Tret provide a interface for also backing up them into the tarball:
+So you may have noticed that **Tret will only automatically backup python modules that will be used in your program**. For non-python code files, such as shell scripts that trigger python programs, Tret provides an interface to back them up into the tarball as well:
 
 ```python
 from tret import TretArguments, TretWorkspace
@@ -92,7 +92,7 @@ workspace.backup(
 )
 ```
 
-So if your project is not mainly written in python, maybe Tret is not a good choice for you.
+So if your project is not mainly written in python, maybe Tret is not the best choice for you.
 
 ### 🧐How does Tret backup your data?
 Actually, Tret provides 3 choices for backing up your data:
