@@ -29,7 +29,7 @@ def is_git_exists():
 
 def backup_codes(
     workspace_dir: str,
-    additional_codefiles_to_backup: list[str] = None,
+    additional_codefiles_to_backup: list[str] = [],
     backup_codes_as_tarball: bool = False,
 ):
     """
@@ -41,7 +41,7 @@ def backup_codes(
 
     Args:
         workspace_dir (str): The directory where the backup files will be stored.
-        additional_codefiles_to_backup (list[str], optional): Additional code files to include in the backup. Defaults to None.
+        additional_codefiles_to_backup (list[str], optional): Additional code files to include in the backup. Defaults to [].
         backup_codes_as_tarball (bool, optional): If True, backs up all code files as a tarball regardless of Git presence. Defaults to False.
 
     Raises:

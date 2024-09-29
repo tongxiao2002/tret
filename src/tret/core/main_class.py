@@ -83,7 +83,7 @@ class TretWorkspace:
         datafiles_to_backup: list[str] = None,
         datafiles_to_backup_as_tarball: list[str] = None,
         datafiles_to_backup_as_symlink: list[str] = None,
-        additional_codefiles_to_backup: list[str] = None,
+        additional_codefiles_to_backup: list[str] = [],
     ):
         """
         Backs up specified files in different formats.
@@ -91,6 +91,7 @@ class TretWorkspace:
             files_to_backup (list[str], optional): List of file paths to back up as regular files. Defaults to None.
             files_to_backup_as_tarball (list[str], optional): List of file paths to back up as tarballs. Defaults to None.
             files_to_backup_as_symlink (list[str], optional): List of file paths to back up as symbolic links. Defaults to None.
+            additional_codefiles_to_backup (list[str], optional): List of additional code files to be backed up. Defaults to [].
         Returns:
             None
         """
