@@ -1,12 +1,14 @@
 import os
+import json
 from git.repo import Repo
 from ..constants import (
     REQUIREMENTS_TXT_FILENAME,
     CODES_TARBALL_FILENAME,
     CURRENT_CODES_TARBALL_FILENAME,
-    GIT_INFO_DIRNAME,
-    GIT_DIFF_INFO_FILENAME,
-    GIT_COMMIT_HASH_FILENAME,
+    GIT_INFO_FILENAME,
+    GIT_REPO_PATH_KEYNAME,
+    GIT_DIFF_INFO_KEYNAME,
+    GIT_COMMIT_HASH_KEYNAME,
 )
 from ..utils.tarball_utils import (
     create_tarball_from_files,
@@ -19,9 +21,9 @@ from ..utils.module_detection import (
 )
 
 
-def is_git_exists():
+def is_git_exists(path: str):
     try:
-        _ = Repo(os.getcwd())
+        _ = Repo(path)
         return True
     except Exception:
         return False
@@ -56,7 +58,7 @@ def backup_codes(
     requirements = generate_requirements_txt(external_modules)
 
     all_codesfiles_backup = additional_codefiles_to_backup + [module.__file__ for module in classified_modules['local_modules']]
-    if not is_git_exists() or backup_codes_as_tarball:
+    if not is_git_exists(workspace_dir) or backup_codes_as_tarball:
         # if git does not exist, backup all the codes as a tarball.
         # Here, codes are defined as local modules imported by this experiment and user-defined additional codefiles.
         working_directory = os.getcwd()
@@ -103,14 +105,18 @@ def backup_codes(
         # for git-tracked files, just backup current git commit hash and diff-results for restorage
         commit_hash = repo.head.commit.hexsha
         diff = repo.git.diff(commit_hash)
-        git_info_dir = os.path.join(workspace_dir, GIT_INFO_DIRNAME)
-        os.makedirs(git_info_dir, exist_ok=True)
-        git_commit_hash_filepath = os.path.join(git_info_dir, GIT_COMMIT_HASH_FILENAME)
-        git_diff_info_filepath = os.path.join(git_info_dir, GIT_DIFF_INFO_FILENAME)
-        with open(git_commit_hash_filepath, "w", encoding="utf-8") as fout:
-            fout.write(commit_hash)
-        with open(git_diff_info_filepath, "w", encoding="utf-8") as fout:
-            fout.write(diff)
+        git_info_filepath = os.path.join(workspace_dir, GIT_INFO_FILENAME)
+        gitinfo = {
+            GIT_REPO_PATH_KEYNAME: repo.git_dir,
+            GIT_COMMIT_HASH_KEYNAME: commit_hash,
+            GIT_DIFF_INFO_KEYNAME: diff,
+        }
+        json.dump(
+            gitinfo,
+            open(git_info_filepath, "w", encoding="utf-8"),
+            ensure_ascii=False,
+            indent=4,
+        )
 
 
 def restore_codes(workspace_dir: str):
@@ -130,9 +136,9 @@ def restore_codes(workspace_dir: str):
         AssertionError: If neither the git information directory nor the code tarball file exists in the workspace directory.
     """
     working_directory = os.getcwd()
-    git_info_dir = os.path.join(workspace_dir, GIT_INFO_DIRNAME)
+    git_info_filepath = os.path.join(workspace_dir, GIT_INFO_FILENAME)
     codes_tarball_filepath = os.path.join(workspace_dir, CODES_TARBALL_FILENAME)
-    assert os.path.isdir(git_info_dir) or os.path.isfile(codes_tarball_filepath), \
+    assert os.path.isfile(git_info_filepath) or os.path.isfile(codes_tarball_filepath), \
         f"Codes in Workspace '{workspace_dir}' have corrupted."
 
     if os.path.isfile(codes_tarball_filepath):
@@ -156,18 +162,15 @@ def restore_codes(workspace_dir: str):
     # That's because there may be some duplication between git tracked codes and codes in the tarball.
     # In the case of git tracked codes can be restored easier and are not afraid of overwriting,
     # we firstly restore the codes from git, then restore the codes from tarball which may overwrite the codes from git.
-    if is_git_exists() and os.path.isdir(git_info_dir):
+    if is_git_exists(workspace_dir) and os.path.isdir(git_info_filepath):
         # if git exists, checkout to the stored commit,
         # then restore the unstaged changes from diff info.
-        git_info_dir = os.path.join(workspace_dir, GIT_INFO_DIRNAME)
-        git_commit_hash_filepath = os.path.join(git_info_dir, GIT_COMMIT_HASH_FILENAME)
-        git_diff_info_filepath = os.path.join(git_info_dir, GIT_DIFF_INFO_FILENAME)
-        with open(git_commit_hash_filepath, "r", encoding="utf-8") as fin:
-            commit_hash = fin.read()
+        gitinfo = json.load(open(git_info_filepath, "r", encoding="utf-8"))
+        commit_hash = gitinfo[GIT_COMMIT_HASH_KEYNAME]
 
-        repo = Repo(os.getcwd())
+        repo = Repo(gitinfo[GIT_REPO_PATH_KEYNAME])
         repo.git.checkout(commit_hash)
-        repo.git.execute(["git", "apply", git_diff_info_filepath])
+        repo.git.execute(["git", "apply", gitinfo[GIT_DIFF_INFO_KEYNAME]])
 
     if os.path.isfile(codes_tarball_filepath):
         restore_files_from_tarball(codes_tarball_filepath, output_dir=working_directory)
