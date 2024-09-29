@@ -42,7 +42,14 @@ dependencies = [
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
 
@@ -51,3 +58,9 @@ tret = "tret.main_cli:main_cli"
 
 [project.urls]
 Repository = "https://github.com/tongxiao2002/tret"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8",
+    "pytest-cov>=5"
+]
