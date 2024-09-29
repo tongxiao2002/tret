@@ -1,5 +1,4 @@
 # Totally Reproducible ExperimenTs (Tret)
-⚠️ **This repository is still in development, and some modules have not been fully tested. Please use Tret with caution.** ⚠️
 
 ## Overview
 
