@@ -1,5 +1,6 @@
 import os
 import json
+import tempfile
 from git.repo import Repo
 from ..constants import (
     REQUIREMENTS_TXT_FILENAME,
@@ -173,6 +174,7 @@ def restore_codes(workspace_dir: str):
         current_codes_tarball_filepath = os.path.join(workspace_dir, CURRENT_CODES_TARBALL_FILENAME)
         if not os.path.isfile(current_codes_tarball_filepath):
             filepaths_in_codes_tarball = get_filepaths_in_tarball(codes_tarball_filepath)
+            filepaths_in_codes_tarball = [filepath for filepath in filepaths_in_codes_tarball if os.path.exists(filepath)]
             create_tarball_from_files(
                 filepaths=filepaths_in_codes_tarball,
                 output=current_codes_tarball_filepath,
@@ -188,7 +190,7 @@ def restore_codes(workspace_dir: str):
     # That's because there may be some duplication between git tracked codes and codes in the tarball.
     # In the case of git tracked codes can be restored easier and are not afraid of overwriting,
     # we firstly restore the codes from git, then restore the codes from tarball which may overwrite the codes from git.
-    if os.path.isdir(git_info_filepath):
+    if os.path.isfile(git_info_filepath):
         # if git exists, checkout to the stored commit,
         # then restore the unstaged changes from diff info.
         gitinfo = json.load(open(git_info_filepath, "r", encoding="utf-8"))
@@ -196,9 +198,13 @@ def restore_codes(workspace_dir: str):
 
         repo = Repo(gitinfo[GIT_REPO_PATH_KEYNAME])
         repo.git.checkout(commit_hash)
-        repo.git.execute(["git", "apply", gitinfo[GIT_DIFF_INFO_KEYNAME]])
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", prefix="git-diff-info") as fout:
+            fout.write(gitinfo[GIT_DIFF_INFO_KEYNAME])
+            fout.flush()
+            repo.git.apply(fout.name, allow_empty=True)
 
     if os.path.isfile(codes_tarball_filepath):
         restore_files_from_tarball(codes_tarball_filepath, output_dir=working_directory)
         requirements_filepath = os.path.join(working_directory, REQUIREMENTS_TXT_FILENAME)
-        os.remove(requirements_filepath)
+        if os.path.isfile(requirements_filepath):
+            os.remove(requirements_filepath)
