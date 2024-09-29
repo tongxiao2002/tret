@@ -19,6 +19,10 @@ class TretArguments:
         default=None,
         metadata={"help": "The name of current workspace. Defaults to current datetime."},
     )
+    create_directory: bool = dataclasses.field(
+        default=True,
+        metadata={"help": "Whether to create workspace directory if not exists. Defaults to 'True'."},
+    )
 
     # codes backup & restore arguments
     force_backup_codes_as_tarball: bool = dataclasses.field(

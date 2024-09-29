@@ -38,16 +38,17 @@ class TretWorkspace:
         self.workspace_dir = os.path.join(self.workspace_basedir, self.workspace_name)
         if os.path.isfile(self.workspace_dir):
             raise FileExistsError(f"'{self.workspace_dir}' is already a file, cannot work as a workspace.")
-        os.makedirs(self.workspace_dir, exist_ok=True)
+        if arguments.create_directory:
+            os.makedirs(self.workspace_dir, exist_ok=True)
         self.tret_attributes_filepath = os.path.join(self.workspace_dir, TRET_ATTRIBUTES_FILENAME)
 
-    def restore_current_codes_from_tarball(self, keep_requirements_txt: bool = False):
+    def restore_current_codes_from_tarball(self):
         current_codes_tarball_filepath = os.path.join(self.workspace_dir, "current-codes.tar.gz")
         if not os.path.isfile(current_codes_tarball_filepath):
-            warnings.warn(f"`{current_codes_tarball_filepath}` does not exist. Can not restores current codes.")
+            warnings.warn(f"'{current_codes_tarball_filepath}' does not exist. Can not restores current codes.")
         restore_files_from_tarball(current_codes_tarball_filepath)
-        if not keep_requirements_txt:
-            os.remove(REQUIREMENTS_TXT_FILENAME)
+        requirements_filepath = os.path.join(os.getcwd(), REQUIREMENTS_TXT_FILENAME)
+        os.remove(requirements_filepath)
 
     def restore(self):
         """
@@ -56,6 +57,8 @@ class TretWorkspace:
         Args:
             workspace_dir (str): The directory where the workspace will be restored from.
         """
+        assert os.path.isdir(self.workspace_dir), f"The workspace directory '{self.workspace_dir}' does not exist."
+
         restore_codes(self.workspace_dir)
 
         # check the modify time of symlink and the linked file
@@ -71,7 +74,7 @@ class TretWorkspace:
             raw_datafile_stat = os.stat(symlink_datapath, follow_symlinks=True)
             if raw_datafile_stat.st_mtime > symlink_file_stat.st_mtime:
                 warnings.warn(
-                    f"The target file has been modified more recently than the symlink: `{symlink_datapath}`. "
+                    f"The target file has been modified more recently than the symlink: '{symlink_datapath}'. "
                     "The data may be outdated."
                 )
 

@@ -37,6 +37,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
+    "click",
     "GitPython"
 ]
 classifiers = [
@@ -44,6 +45,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
+
+[project.scripts]
+tret = "tret.main_cli:main_cli"
 
 [project.urls]
 Repository = "https://github.com/tongxiao2002/tret"
