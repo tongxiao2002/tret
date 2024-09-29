@@ -21,12 +21,35 @@ from ..utils.module_detection import (
 )
 
 
-def is_git_exists(path: str):
+def get_git_repo_path(path: str):
+    """
+    Recursively finds the path to the root of a Git repository starting from the given path until reaching current working directory.
+
+    Args:
+        path (str): The starting path to search for the Git repository.
+
+    Returns:
+        str: The path to the Git repository if found, otherwise None.
+    """
+    working_directory = os.getcwd()
     try:
         _ = Repo(path)
-        return True
+        return path
     except Exception:
-        return False
+        dirname = os.path.basename(path)
+        # if working directory is inside `dirname`, it means there does not exist any git repository inside the workspace directory.
+        if dirname != working_directory and working_directory.startswith(dirname):
+            return None
+        else:
+            return get_git_repo_path(os.path.dirname(path))
+
+
+def _start_point_for_finding_git_repo(workspace_dir: str):
+    working_directory = os.getcwd()
+    if os.path.abspath(workspace_dir).startswith(working_directory):
+        return workspace_dir
+    else:
+        return working_directory
 
 
 def backup_codes(
@@ -53,15 +76,18 @@ def backup_codes(
     Returns:
         None
     """
+    working_directory = os.getcwd()
     classified_modules = detect_all_modules()
     external_modules = classified_modules["external_modules"]
     requirements = generate_requirements_txt(external_modules)
 
+    start_point = _start_point_for_finding_git_repo(workspace_dir)
+    git_repo_path = get_git_repo_path(start_point)
+
     all_codesfiles_backup = additional_codefiles_to_backup + [module.__file__ for module in classified_modules['local_modules']]
-    if not is_git_exists(workspace_dir) or backup_codes_as_tarball:
+    if not git_repo_path or backup_codes_as_tarball:
         # if git does not exist, backup all the codes as a tarball.
         # Here, codes are defined as local modules imported by this experiment and user-defined additional codefiles.
-        working_directory = os.getcwd()
         rel_filepaths = [os.path.relpath(file, working_directory) for file in all_codesfiles_backup]
 
         requirements_filepath = os.path.join(working_directory, REQUIREMENTS_TXT_FILENAME)
@@ -88,11 +114,11 @@ def backup_codes(
         with open(requirements_filepath, "w", encoding="utf-8") as fout:
             fout.write("\n".join(requirements))
 
-        repo = Repo(os.getcwd())
+        repo = Repo(git_repo_path)
         # get not tracked codefiles, which will be backed up as a tarball
         git_tracked_files = _get_gitrepo_tracked_files(repo)
         git_not_tracked_codefiles = [
-            os.path.relpath(item, os.getcwd())
+            os.path.relpath(item, working_directory)
             for item in all_codesfiles_backup if item not in git_tracked_files
         ]
         codes_tarball_filepath = os.path.join(workspace_dir, CODES_TARBALL_FILENAME)
@@ -162,7 +188,7 @@ def restore_codes(workspace_dir: str):
     # That's because there may be some duplication between git tracked codes and codes in the tarball.
     # In the case of git tracked codes can be restored easier and are not afraid of overwriting,
     # we firstly restore the codes from git, then restore the codes from tarball which may overwrite the codes from git.
-    if is_git_exists(workspace_dir) and os.path.isdir(git_info_filepath):
+    if os.path.isdir(git_info_filepath):
         # if git exists, checkout to the stored commit,
         # then restore the unstaged changes from diff info.
         gitinfo = json.load(open(git_info_filepath, "r", encoding="utf-8"))
