@@ -6,6 +6,7 @@ from ..arguments import TretArguments
 from ..constants import (
     REQUIREMENTS_TXT_FILENAME,
     TRET_ATTRIBUTES_FILENAME,
+    CURRENT_CODES_TARBALL_FILENAME,
 )
 from .data_backup import backup_data
 from .code_backup_and_restore import (
@@ -42,13 +43,17 @@ class TretWorkspace:
             os.makedirs(self.workspace_dir, exist_ok=True)
         self.tret_attributes_filepath = os.path.join(self.workspace_dir, TRET_ATTRIBUTES_FILENAME)
 
-    def restore_current_codes_from_tarball(self):
-        current_codes_tarball_filepath = os.path.join(self.workspace_dir, "current-codes.tar.gz")
+    def restore_current_codes_from_tarball(self, remove_after_restore: bool = True):
+        current_codes_tarball_filepath = os.path.join(self.workspace_dir, CURRENT_CODES_TARBALL_FILENAME)
         if not os.path.isfile(current_codes_tarball_filepath):
             warnings.warn(f"'{current_codes_tarball_filepath}' does not exist. Can not restores current codes.")
         restore_files_from_tarball(current_codes_tarball_filepath)
+        if remove_after_restore:
+            os.remove(current_codes_tarball_filepath)
+
         requirements_filepath = os.path.join(os.getcwd(), REQUIREMENTS_TXT_FILENAME)
-        os.remove(requirements_filepath)
+        if os.path.isfile(requirements_filepath):
+            os.remove(requirements_filepath)
 
     def restore(self):
         """

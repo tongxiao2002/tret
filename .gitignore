@@ -3,6 +3,10 @@
 build/
 *.egg-info/
 
+# pytest
+.pytest_cache/
+.coverage
+
 # IDE
 .vscode
 
