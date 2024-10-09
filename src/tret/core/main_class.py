@@ -36,12 +36,15 @@ class TretWorkspace:
         if self.workspace_name is None:
             self.workspace_name = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-        self.workspace_dir = os.path.join(self.workspace_basedir, self.workspace_name)
         if os.path.isfile(self.workspace_dir):
             raise FileExistsError(f"'{self.workspace_dir}' is already a file, cannot work as a workspace.")
         if arguments.create_directory:
             os.makedirs(self.workspace_dir, exist_ok=True)
         self.tret_attributes_filepath = os.path.join(self.workspace_dir, TRET_ATTRIBUTES_FILENAME)
+
+    @property
+    def workspace_dir(self) -> str:
+        return os.path.join(self.workspace_basedir, self.workspace_name)
 
     def restore_current_codes_from_tarball(self, remove_after_restore: bool = True):
         current_codes_tarball_filepath = os.path.join(self.workspace_dir, CURRENT_CODES_TARBALL_FILENAME)
@@ -55,7 +58,7 @@ class TretWorkspace:
         if os.path.isfile(requirements_filepath):
             os.remove(requirements_filepath)
 
-    def restore(self):
+    def restore(self) -> dict:
         """
         Restores the codes from the specified workspace directory.
 
@@ -63,6 +66,24 @@ class TretWorkspace:
             workspace_dir (str): The directory where the workspace will be restored from.
         """
         assert os.path.isdir(self.workspace_dir), f"The workspace directory '{self.workspace_dir}' does not exist."
+
+        # first restore from any `current-codes.tar.gz`
+        current_codes_tarball_filepaths = []
+        existing_workspace_names = os.listdir(self.workspace_basedir)
+        for ws_name in existing_workspace_names:
+            ws_dir = os.path.join(self.workspace_basedir, ws_name)
+            tarball_filepath = os.path.join(ws_dir, CURRENT_CODES_TARBALL_FILENAME)
+            if os.path.isfile(tarball_filepath):
+                current_codes_tarball_filepaths.append(tarball_filepath)
+        assert len(current_codes_tarball_filepaths) <= 1, "Multiple `current-codes.tar.gz` found in workspace base dir."
+
+        if current_codes_tarball_filepaths:
+            warnings.warn(
+                f"Found existing 'current-codes.tar.gz' in {current_codes_tarball_filepaths[0]}. "
+                f"Restoring from '{current_codes_tarball_filepaths[0]}' first."
+            )
+            restore_files_from_tarball(current_codes_tarball_filepaths[0])
+            os.remove(current_codes_tarball_filepaths[0])
 
         restore_codes(self.workspace_dir)
 
@@ -83,12 +104,17 @@ class TretWorkspace:
                     "The data may be outdated."
                 )
 
+        # load metadata
+        tret_attributes = json.load(open(self.tret_attributes_filepath, "r", encoding="utf-8"))
+        return tret_attributes['metadata']
+
     def backup(
         self,
         datafiles_to_backup: list[str] = None,
         datafiles_to_backup_as_tarball: list[str] = None,
         datafiles_to_backup_as_symlink: list[str] = None,
         additional_codefiles_to_backup: list[str] = [],
+        metadata: dict = {},
     ):
         """
         Backs up specified files in different formats.
@@ -115,6 +141,7 @@ class TretWorkspace:
         # save attributes
         tret_attributes = {
             "backup_timestamp": datetime.datetime.now().timestamp(),
+            "metadata": {**metadata},
         }
 
         json.dump(
