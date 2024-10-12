@@ -48,7 +48,7 @@ def get_git_repo_path(path: str):
 def _start_point_for_finding_git_repo(workspace_dir: str):
     working_directory = os.getcwd()
     if os.path.abspath(workspace_dir).startswith(working_directory):
-        return workspace_dir
+        return os.path.abspath(workspace_dir)
     else:
         return working_directory
 
@@ -86,6 +86,8 @@ def backup_codes(
     git_repo_path = get_git_repo_path(start_point)
 
     all_codesfiles_backup = additional_codefiles_to_backup + [module.__file__ for module in classified_modules['local_modules']]
+    # deduplication
+    all_codesfiles_backup = list(set(all_codesfiles_backup))
     if not git_repo_path or backup_codes_as_tarball:
         # if git does not exist, backup all the codes as a tarball.
         # Here, codes are defined as local modules imported by this experiment and user-defined additional codefiles.
