@@ -32,7 +32,7 @@ authors = [
     {name = "tongxiao2002", email = "tongxiao2002@mail.ustc.edu.cn"}
 ]
 description = "Totally Repreducible ExperimenTs (Tret)"
-version = "0.2.0"
+version = "0.2.0.rc1"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"

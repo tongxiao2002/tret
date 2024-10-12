@@ -86,6 +86,7 @@ def backup_codes(
     git_repo_path = get_git_repo_path(start_point)
 
     all_codesfiles_backup = additional_codefiles_to_backup + [module.__file__ for module in classified_modules['local_modules']]
+    all_codesfiles_backup = [os.path.abspath(file) for file in all_codesfiles_backup]
     # deduplication
     all_codesfiles_backup = list(set(all_codesfiles_backup))
     if not git_repo_path or backup_codes_as_tarball:
@@ -120,16 +121,18 @@ def backup_codes(
         repo = Repo(git_repo_path)
         # get not tracked codefiles, which will be backed up as a tarball
         git_tracked_files = _get_gitrepo_tracked_files(repo)
+        git_tracked_files = [os.path.abspath(file) for file in git_tracked_files]
         git_not_tracked_codefiles = [
             os.path.relpath(item, working_directory)
             for item in all_codesfiles_backup if item not in git_tracked_files
         ]
-        codes_tarball_filepath = os.path.join(workspace_dir, CODES_TARBALL_FILENAME)
-        create_tarball_from_files(
-            filepaths=git_not_tracked_codefiles,
-            output=codes_tarball_filepath,
-            append_data_to_existing_tarball=False,
-        )
+        if len(git_not_tracked_codefiles) > 0:
+            codes_tarball_filepath = os.path.join(workspace_dir, CODES_TARBALL_FILENAME)
+            create_tarball_from_files(
+                filepaths=git_not_tracked_codefiles,
+                output=codes_tarball_filepath,
+                append_data_to_existing_tarball=False,
+            )
 
         # for git-tracked files, just backup current git commit hash and diff-results for restorage
         commit_hash = repo.head.commit.hexsha
