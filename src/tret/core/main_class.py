@@ -32,7 +32,6 @@ class TretWorkspace:
         self.workspace_basedir = self.arguments.workspace_basedir
         self.force_backup_codes_as_tarball = self.arguments.force_backup_codes_as_tarball
         self.workspace_name = self.arguments.workspace_name
-        self.append_data_to_existing_tarball = self.arguments.append_data_to_existing_tarball
         if self.workspace_name is None:
             self.workspace_name = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
@@ -113,6 +112,7 @@ class TretWorkspace:
         datafiles_to_backup: list[str] = None,
         datafiles_to_backup_as_tarball: list[str] = None,
         datafiles_to_backup_as_symlink: list[str] = None,
+        append_data_to_existing_tarball: bool = True,
         additional_codefiles_to_backup: list[str] = [],
         metadata: dict = {},
     ):
@@ -122,6 +122,8 @@ class TretWorkspace:
             files_to_backup (list[str], optional): List of file paths to back up as regular files. Defaults to None.
             files_to_backup_as_tarball (list[str], optional): List of file paths to back up as tarballs. Defaults to None.
             files_to_backup_as_symlink (list[str], optional): List of file paths to back up as symbolic links. Defaults to None.
+            append_data_to_existing_tarball (bool, optional): If data tarball e.g, `data.tar.gz` already exists,
+                whether to append new data to this tarball, or just overwrite it.
             additional_codefiles_to_backup (list[str], optional): List of additional code files to be backed up. Defaults to [].
         Returns:
             None
@@ -136,11 +138,13 @@ class TretWorkspace:
             files_to_backup=datafiles_to_backup,
             files_to_backup_as_tarball=datafiles_to_backup_as_tarball,
             files_to_backup_as_symlink=datafiles_to_backup_as_symlink,
-            append_data_to_existing_tarball=self.append_data_to_existing_tarball,
+            append_data_to_existing_tarball=append_data_to_existing_tarball,
         )
         # save attributes
+        backup_time = datetime.datetime.now()
         tret_attributes = {
-            "backup_timestamp": datetime.datetime.now().timestamp(),
+            "backup_timestamp": backup_time.timestamp(),
+            "backup_time": backup_time.strftime("%Y-%m-%d %H:%M:%S"),
             "metadata": {**metadata},
         }
 

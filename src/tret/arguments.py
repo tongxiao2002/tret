@@ -29,10 +29,3 @@ class TretArguments:
         default=False,
         metadata={"help": "Whether to forcely backup codes as a tarball regardless the existence of git. Defaults to 'False'."},
     )
-
-    # data backup arguments
-    append_data_to_existing_tarball: bool = dataclasses.field(
-        default=True,
-        metadata={"help": "If data tarball e.g, `data.tar.gz` already exists, "
-                  "whether to append new data to this tarball, or just overwrite it."}
-    )
