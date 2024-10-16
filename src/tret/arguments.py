@@ -8,7 +8,7 @@ from typing import Callable, Any, Union, Literal, Optional
 from .constants import DEFAULT_WORKSPACE_DIR
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class TretArguments:
     # workspace path arguments
     workspace_basedir: str = dataclasses.field(

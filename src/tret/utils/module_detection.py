@@ -1,5 +1,6 @@
 import os
 import sys
+import site
 import types
 python_version = sys.version_info
 assert python_version.major == 3, "Tret only supports Python3."
@@ -36,6 +37,21 @@ def is_local_module(module: types.ModuleType):
     return os.path.abspath(module_path).startswith(os.getcwd())
 
 
+def is_external_module(module: types.ModuleType):
+    """
+    Determines if a given module is an external module installed in the site-packages directory.
+
+    Args:
+        module (types.ModuleType): The module to check.
+
+    Returns:
+        bool: True if the module is located in one of the site-packages directories, False otherwise.
+    """
+    site_package_directories = site.getsitepackages()
+    module_path = module.__file__
+    return any(module_path.startswith(site_package_dir) for site_package_dir in site_package_directories)
+
+
 def get_external_module_version(module: types.ModuleType):
     """get the version of an external module
     """
@@ -67,10 +83,10 @@ def detect_all_modules():
         splitted_module_name = module.__name__.split('.')
         if is_standard_lib_or_builtin_lib(module) or is_standard_lib_or_builtin_lib(modules[splitted_module_name[0]]):
             classified_modules["standard_libs"].append(module)
-        elif is_local_module(module):
-            classified_modules["local_modules"].append(module)
-        else:
+        elif is_external_module(module):
             classified_modules["external_modules"].append(module)
+        else:
+            classified_modules["local_modules"].append(module)
     # deduplication
     for class_name, modules in classified_modules.items():
         classified_modules[class_name] = list(set(modules))
