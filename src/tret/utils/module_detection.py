@@ -2,12 +2,16 @@ import os
 import sys
 import site
 import types
+
 python_version = sys.version_info
 assert python_version.major == 3, "Tret only supports Python3."
 if python_version.minor < 10:
     try:
         from stdlib_list import stdlib_list
-        stdlibs = stdlib_list(f"{python_version.major}.{python_version.minor}") + list(sys.builtin_module_names)
+
+        stdlibs = stdlib_list(f"{python_version.major}.{python_version.minor}") + list(
+            sys.builtin_module_names
+        )
     except ImportError:
         raise ImportError(
             "The stdlib_list package is required for Python versions < 3.10. "
@@ -18,21 +22,24 @@ else:
 
 import importlib
 import importlib.metadata
+
 # import pipdeptree
 
 
 def is_standard_lib_or_builtin_lib(module: types.ModuleType):
-    """check if a module is part of the standard library or python builtin library
-    """
+    """check if a module is part of the standard library or python builtin library"""
     module_name = module.__name__
     # stdlibs contains all python standard library
     # modules without __file__ attribute are python builtin modules
-    return module_name in stdlibs or (not hasattr(module, "__file__")) or not module.__file__
+    return (
+        module_name in stdlibs
+        or (not hasattr(module, "__file__"))
+        or not module.__file__
+    )
 
 
 def is_local_module(module: types.ModuleType):
-    """check if a module is part of the local module (i.e., not installed via pip or conda)
-    """
+    """check if a module is part of the local module (i.e., not installed via pip or conda)"""
     module_path = module.__file__
     return os.path.abspath(module_path).startswith(os.getcwd())
 
@@ -49,12 +56,14 @@ def is_external_module(module: types.ModuleType):
     """
     site_package_directories = site.getsitepackages()
     module_path = module.__file__
-    return any(module_path.startswith(site_package_dir) for site_package_dir in site_package_directories)
+    return any(
+        module_path.startswith(site_package_dir)
+        for site_package_dir in site_package_directories
+    )
 
 
 def get_external_module_version(module: types.ModuleType):
-    """get the version of an external module
-    """
+    """get the version of an external module"""
     try:
         module_version = importlib.metadata.version(module.__name__)
     except Exception:
@@ -80,8 +89,11 @@ def detect_all_modules():
     }
     for module_name, module in modules.items():
         # only classify root modules
-        splitted_module_name = module.__name__.split('.')
-        if is_standard_lib_or_builtin_lib(module) or is_standard_lib_or_builtin_lib(modules[splitted_module_name[0]]):
+        splitted_module_name = module.__name__.split(".")
+        if is_standard_lib_or_builtin_lib(module) or (
+            splitted_module_name[0] in modules
+            and is_standard_lib_or_builtin_lib(modules[splitted_module_name[0]])
+        ):
             classified_modules["standard_libs"].append(module)
         elif is_external_module(module):
             classified_modules["external_modules"].append(module)
